@@ -1,0 +1,60 @@
+/* ItemCard Styles */
+
+.item-card {
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.item-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15) !important;
+}
+
+.item-card:hover .card-img-top {
+  transform: scale(1.05);
+}
+
+.z-index-2 {
+  z-index: 2;
+}
+
+.card-img-top-wrapper {
+  position: relative;
+  overflow: hidden;
+}
+
+.card-img-top {
+  transition: transform 0.3s ease;
+}
+
+.card-hover-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.05) 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.item-card:hover .card-hover-overlay {
+  opacity: 1;
+}
+
+/* Favorite button hover effect */
+.item-card .btn-light:hover {
+  background-color: #fff;
+  transform: scale(1.1);
+}
+
+/* Card footer button */
+.card-footer .btn-primary {
+  transition: all 0.3s ease;
+}
+
+.card-footer .btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(13, 110, 253, 0.3);
+}
