@@ -42,3 +42,13 @@ export const deleteMessage = async (messageId) => {
   const response = await API.delete(`/messages/${messageId}`);
   return response.data;
 };
+
+// Default export
+export default {
+  sendMessage,
+  getConversations,
+  getConversation,
+  markAsRead,
+  getUnreadCount,
+  deleteMessage
+};
