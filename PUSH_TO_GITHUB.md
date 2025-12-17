@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # 🚀 Push to GitHub Commands
 
 ## Run these commands in your terminal:
@@ -23,4 +24,31 @@ git clone https://github.com/YOUR_USERNAME/sharehub.git
 1. Replace YOUR_USERNAME with your actual GitHub username
 2. Invite friends as collaborators in repository settings
 3. Share the repository URL with them
+=======
+# 🚀 Push to GitHub Commands
+
+## Run these commands in your terminal:
+
+```bash
+# Add GitHub as remote (replace YOUR_USERNAME with your GitHub username)
+git remote add origin https://github.com/YOUR_USERNAME/sharehub.git
+
+# Set main branch
+git branch -M main
+
+# Push to GitHub
+git push -u origin main
+```
+
+## After pushing, your friends can clone with:
+
+```bash
+git clone https://github.com/YOUR_USERNAME/sharehub.git
+```
+
+## 🎯 Remember to:
+1. Replace YOUR_USERNAME with your actual GitHub username
+2. Invite friends as collaborators in repository settings
+3. Share the repository URL with them
+>>>>>>> 6fe8e3fe198022fcbfc3a47885f3681502d32351
 4. Tell them to follow setup.md for local development setup

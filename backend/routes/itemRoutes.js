@@ -11,7 +11,9 @@ const {
   deleteItemImage,
   setPrimaryImage,
   advancedSearch,
-  updateItemStatus
+  updateItemStatus,
+  getFeaturedItems,
+  getPremiumItems
 } = require('../controllers/itemController');
 const { verifyToken } = require('../middleware/authMiddleware');
 const { uploadImages } = require('../middleware/uploadMiddleware');
@@ -27,6 +29,14 @@ router.get('/', getAllItems);
 // GET /api/items/search - Advanced search with filters and sorting (public)
 // Query params: category, listing_type, min_price, max_price, condition, sort_by, order, search
 router.get('/search', advancedSearch);
+
+// GET /api/items/featured - Get featured items (public)
+// Query params: limit (optional, default 6)
+router.get('/featured', getFeaturedItems);
+
+// GET /api/items/premium - Get premium items (public)
+// Query params: limit (optional, default 4)
+router.get('/premium', getPremiumItems);
 
 // GET /api/items/nearby - Get nearby items based on location (public)
 // Query params: latitude, longitude, radius (optional, default 10km)

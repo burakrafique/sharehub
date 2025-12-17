@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShareHub - Demo Data Setup</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: white;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+        }
+        .setup-btn {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            border-radius: 10px;
+            cursor: pointer;
+            width: 100%;
+            margin: 20px 0;
+            transition: all 0.3s ease;
+        }
+        .setup-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        .setup-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .status {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 10px;
+            font-weight: bold;
+        }
+        .status.loading {
+            background: rgba(255, 193, 7, 0.2);
+            border: 2px solid #ffc107;
+        }
+        .status.success {
+            background: rgba(40, 167, 69, 0.2);
+            border: 2px solid #28a745;
+        }
+        .status.error {
+            background: rgba(220, 53, 69, 0.2);
+            border: 2px solid #dc3545;
+        }
+        .instructions {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        .step {
+            margin: 10px 0;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 5px;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .stat-card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+        .emoji {
+            font-size: 1.5em;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 ShareHub Demo Data Setup</h1>
+        
+        <div class="instructions">
+            <h3>📋 Instructions for FYP Evaluation:</h3>
+            <div class="step">
+                <span class="emoji">1️⃣</span>
+                <strong>Start your backend server:</strong> Make sure your backend is running on port 5000
+            </div>
+            <div class="step">
+                <span class="emoji">2️⃣</span>
+                <strong>Click the button below:</strong> This will automatically populate your database with demo items
+            </div>
+            <div class="step">
+                <span class="emoji">3️⃣</span>
+                <strong>Start your frontend:</strong> Run your React app and see the populated homepage
+            </div>
+        </div>
+
+        <button id="setupBtn" class="setup-btn" onclick="setupDemoData()">
+            🎯 Setup Demo Data for FYP Evaluation
+        </button>
+
+        <div id="status" style="display: none;"></div>
+        <div id="stats" style="display: none;"></div>
+
+        <div class="instructions">
+            <h3>✅ What This Will Add:</h3>
+            <div class="step">
+                <span class="emoji">👕</span>
+                <strong>Clothes:</strong> 5 items (Designer jackets, suits, dresses)
+            </div>
+            <div class="step">
+                <span class="emoji">📚</span>
+                <strong>Books:</strong> 5 items (Programming, medical, engineering books)
+            </div>
+            <div class="step">
+                <span class="emoji">🍚</span>
+                <strong>Ration:</strong> 5 items (Rice, atta, oil, sugar packages)
+            </div>
+            <div class="step">
+                <span class="emoji">⭐</span>
+                <strong>Premium Items:</strong> Special verified items with badges
+            </div>
+            <div class="step">
+                <span class="emoji">🖼️</span>
+                <strong>Images:</strong> Professional product images for all items
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function setupDemoData() {
+            const btn = document.getElementById('setupBtn');
+            const status = document.getElementById('status');
+            const statsDiv = document.getElementById('stats');
+            
+            // Disable button and show loading
+            btn.disabled = true;
+            btn.textContent = '⏳ Setting up demo data...';
+            
+            status.style.display = 'block';
+            status.className = 'status loading';
+            status.innerHTML = '<span class="emoji">⏳</span> Setting up demo data... Please wait!';
+            
+            try {
+                const response = await fetch('http://localhost:5000/api/setup/demo-data', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    status.className = 'status success';
+                    status.innerHTML = `
+                        <span class="emoji">🎉</span> 
+                        <strong>Success!</strong> Demo data has been set up successfully!
+                        <br><br>
+                        <span class="emoji">🚀</span> Your project is now ready for FYP evaluation!
+                    `;
+                    
+                    // Show statistics
+                    if (data.statistics) {
+                        statsDiv.style.display = 'block';
+                        statsDiv.innerHTML = `
+                            <h3>📊 Database Statistics:</h3>
+                            <div class="stats">
+                                <div class="stat-card">
+                                    <div class="stat-number">${data.statistics.totalItems}</div>
+                                    <div>Total Items</div>
+                                </div>
+                                ${data.statistics.itemsByCategory.map(item => `
+                                    <div class="stat-card">
+                                        <div class="stat-number">${item.count}</div>
+                                        <div>${item.category} (${item.listing_type})</div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        `;
+                    }
+                    
+                    btn.textContent = '✅ Demo Data Setup Complete!';
+                    
+                    // Show next steps
+                    setTimeout(() => {
+                        status.innerHTML += `
+                            <br><br>
+                            <strong>🎯 Next Steps:</strong>
+                            <br>1. Start your React frontend (npm start)
+                            <br>2. Visit http://localhost:3000 to see your populated homepage
+                            <br>3. Your project is ready for evaluation! 🚀
+                        `;
+                    }, 2000);
+                    
+                } else {
+                    throw new Error(data.message || 'Setup failed');
+                }
+                
+            } catch (error) {
+                status.className = 'status error';
+                status.innerHTML = `
+                    <span class="emoji">❌</span> 
+                    <strong>Error:</strong> ${error.message}
+                    <br><br>
+                    <strong>Troubleshooting:</strong>
+                    <br>• Make sure your backend server is running on port 5000
+                    <br>• Check that your database is connected
+                    <br>• Verify your .env file configuration
+                `;
+                
+                btn.disabled = false;
+                btn.textContent = '🔄 Try Again';
+            }
+        }
+
+        // Check if backend is running
+        async function checkBackend() {
+            try {
+                const response = await fetch('http://localhost:5000/');
+                if (response.ok) {
+                    document.getElementById('setupBtn').style.background = 'linear-gradient(45deg, #4CAF50, #45a049)';
+                }
+            } catch (error) {
+                const btn = document.getElementById('setupBtn');
+                btn.style.background = '#dc3545';
+                btn.textContent = '❌ Backend Not Running - Start Backend First';
+                btn.disabled = true;
+            }
+        }
+
+        // Check backend status on page load
+        checkBackend();
+    </script>
+</body>
+</html>

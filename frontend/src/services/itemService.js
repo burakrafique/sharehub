@@ -88,6 +88,18 @@ export const setPrimaryImage = async (imageId) => {
   return response.data;
 };
 
+// Get featured items
+export const getFeaturedItems = async (limit = 6) => {
+  const response = await API.get(`/items/featured?limit=${limit}`);
+  return response.data;
+};
+
+// Get premium items
+export const getPremiumItems = async (limit = 4) => {
+  const response = await API.get(`/items/premium?limit=${limit}`);
+  return response.data;
+};
+
 // Default export
 export default {
   getAllItems,
@@ -100,5 +112,7 @@ export default {
   getUserItems,
   updateItemStatus,
   deleteItemImage,
-  setPrimaryImage
+  setPrimaryImage,
+  getFeaturedItems,
+  getPremiumItems
 };

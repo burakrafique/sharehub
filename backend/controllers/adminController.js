@@ -160,6 +160,7 @@ const getPlatformStats = async (req, res, next) => {
         COUNT(*) as total_items,
         SUM(CASE WHEN status = 'available' THEN 1 ELSE 0 END) as available_items,
         SUM(CASE WHEN status = 'sold' THEN 1 ELSE 0 END) as sold_items,
+        SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending_items,
         SUM(CASE WHEN category = 'clothes' THEN 1 ELSE 0 END) as clothes_items,
         SUM(CASE WHEN category = 'books' THEN 1 ELSE 0 END) as books_items,
         SUM(CASE WHEN category = 'ration' THEN 1 ELSE 0 END) as ration_items
@@ -175,9 +176,18 @@ const getPlatformStats = async (req, res, next) => {
       FROM transactions
     `);
 
+    // Simple stats for dashboard
+    const simpleStats = {
+      totalUsers: userStats[0].total_users || 0,
+      totalItems: itemStats[0].total_items || 0,
+      totalTransactions: transactionStats[0].total_transactions || 0,
+      pendingItems: itemStats[0].pending_items || 0
+    };
+
     res.status(200).json({
       success: true,
-      stats: {
+      data: simpleStats,
+      detailedStats: {
         users: userStats[0],
         items: itemStats[0],
         transactions: transactionStats[0]

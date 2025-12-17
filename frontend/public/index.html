@@ -20,11 +20,28 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     
     <!-- Google Maps API -->
-    <script 
-      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAhBaH-eptW6gL8kJMedj_RFyOPWJtMz1k&libraries=places"
-      async
-      defer
-    ></script>
+    <script>
+      // Load Google Maps API dynamically
+      (function() {
+        const apiKey = '%REACT_APP_GOOGLE_MAPS_API_KEY%';
+        if (apiKey && apiKey !== 'REACT_APP_GOOGLE_MAPS_API_KEY') {
+          const script = document.createElement('script');
+          script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&callback=initGoogleMaps`;
+          script.async = true;
+          script.defer = true;
+          
+          // Global callback
+          window.initGoogleMaps = function() {
+            console.log('Google Maps API loaded via index.html');
+            window.googleMapsLoaded = true;
+          };
+          
+          document.head.appendChild(script);
+        } else {
+          console.warn('Google Maps API key not found in environment variables');
+        }
+      })();
+    </script>
     
     <!--
       Notice the use of %PUBLIC_URL% in the tags above.

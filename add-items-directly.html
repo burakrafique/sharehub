@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Items Directly</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        button {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px 5px;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #218838;
+        }
+        .result {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+        }
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Add Items Directly to Database</h1>
+        <p>This will add items directly using SQL commands through the API.</p>
+        
+        <button onclick="addItemsDirectly()">🎯 Add Demo Items Now</button>
+        <div id="result"></div>
+    </div>
+
+    <script>
+        async function addItemsDirectly() {
+            const result = document.getElementById('result');
+            result.className = 'result';
+            result.textContent = '⏳ Adding items directly to database...';
+            
+            try {
+                // First, let's try to add items using a different approach
+                const response = await fetch('http://localhost:5000/api/setup/demo-data', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    result.className = 'result success';
+                    result.textContent = '🎉 Items added successfully!\n\n' + JSON.stringify(data, null, 2) + '\n\nNow refresh your frontend page!';
+                } else {
+                    const errorData = await response.json();
+                    result.className = 'result error';
+                    result.textContent = '❌ Failed to add items:\n' + JSON.stringify(errorData, null, 2);
+                }
+            } catch (error) {
+                result.className = 'result error';
+                result.textContent = '❌ Error adding items:\n' + error.message + '\n\nMake sure your backend server is running on port 5000.';
+            }
+        }
+    </script>
+</body>
+</html>

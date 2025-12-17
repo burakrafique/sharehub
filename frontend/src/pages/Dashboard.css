@@ -1,0 +1,95 @@
+/* Dashboard Specific Styles */
+
+.hover-shadow {
+  transition: all 0.3s ease;
+}
+
+.hover-shadow:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
+}
+
+.hover-lift {
+  transition: all 0.3s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+/* Quick Action Buttons */
+.btn.hover-lift:hover {
+  text-decoration: none;
+}
+
+.btn.hover-lift:hover strong {
+  color: inherit;
+}
+
+/* Stat Cards */
+.text-decoration-none:hover .text-dark {
+  color: inherit !important;
+}
+
+.text-decoration-none:hover .text-muted {
+  color: #6c757d !important;
+}
+
+/* Recent Items Hover */
+.recent-item-hover {
+  transition: background-color 0.2s ease;
+  border-radius: 8px;
+  padding: 0.5rem;
+  margin: -0.5rem;
+}
+
+.recent-item-hover:hover {
+  background-color: #f8f9fa;
+}
+
+/* Notification Item Hover */
+.notification-item {
+  transition: background-color 0.2s ease;
+  border-radius: 8px;
+  padding: 0.5rem;
+  margin: -0.5rem;
+}
+
+.notification-item:hover {
+  background-color: #f8f9fa;
+}
+
+/* Badge animations */
+.badge {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .hover-lift:hover,
+  .hover-shadow:hover {
+    transform: none;
+  }
+  
+  .btn.py-4 {
+    padding-top: 2rem !important;
+    padding-bottom: 2rem !important;
+  }
+  
+  .fs-1 {
+    font-size: 2rem !important;
+  }
+}

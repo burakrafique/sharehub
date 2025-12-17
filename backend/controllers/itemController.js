@@ -555,6 +555,78 @@ const updateItemStatus = async (req, res, next) => {
   }
 };
 
+// Get featured items
+const getFeaturedItems = async (req, res, next) => {
+  try {
+    const limit = req.query.limit || 6;
+    
+    const [items] = await pool.execute(`
+      SELECT 
+        items.*,
+        users.name as owner_name,
+        users.phone as owner_phone,
+        GROUP_CONCAT(item_images.image_url) as images
+      FROM items
+      INNER JOIN users ON items.user_id = users.id
+      LEFT JOIN item_images ON items.id = item_images.item_id
+      WHERE items.status = 'available'
+      GROUP BY items.id
+      ORDER BY items.created_at DESC
+      LIMIT ?
+    `, [parseInt(limit)]);
+
+    // Process images for each item
+    const processedItems = items.map(item => ({
+      ...item,
+      images: item.images ? item.images.split(',') : []
+    }));
+
+    res.status(200).json({
+      success: true,
+      count: processedItems.length,
+      data: processedItems
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Get premium items
+const getPremiumItems = async (req, res, next) => {
+  try {
+    const limit = req.query.limit || 4;
+    
+    const [items] = await pool.execute(`
+      SELECT 
+        items.*,
+        users.name as owner_name,
+        users.phone as owner_phone,
+        GROUP_CONCAT(item_images.image_url) as images
+      FROM items
+      INNER JOIN users ON items.user_id = users.id
+      LEFT JOIN item_images ON items.id = item_images.item_id
+      WHERE items.status = 'available' AND items.is_premium = true
+      GROUP BY items.id
+      ORDER BY items.created_at DESC
+      LIMIT ?
+    `, [parseInt(limit)]);
+
+    // Process images for each item
+    const processedItems = items.map(item => ({
+      ...item,
+      images: item.images ? item.images.split(',') : []
+    }));
+
+    res.status(200).json({
+      success: true,
+      count: processedItems.length,
+      data: processedItems
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   createItem,
   getAllItems,
@@ -566,5 +638,7 @@ module.exports = {
   deleteItemImage,
   setPrimaryImage,
   advancedSearch,
-  updateItemStatus
+  updateItemStatus,
+  getFeaturedItems,
+  getPremiumItems
 };

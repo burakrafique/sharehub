@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Database Checker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .result {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+        }
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 ShareHub Database Checker</h1>
+        
+        <h3>Step 1: Check Backend Status</h3>
+        <button onclick="checkBackend()">Check Backend</button>
+        <div id="backendResult"></div>
+        
+        <h3>Step 2: Check Items API</h3>
+        <button onclick="checkItems()">Check Items</button>
+        <div id="itemsResult"></div>
+        
+        <h3>Step 3: Setup Demo Data</h3>
+        <button onclick="setupDemoData()">Setup Demo Data</button>
+        <div id="setupResult"></div>
+        
+        <h3>Step 4: Check Featured Items</h3>
+        <button onclick="checkFeatured()">Check Featured Items</button>
+        <div id="featuredResult"></div>
+    </div>
+
+    <script>
+        async function checkBackend() {
+            const result = document.getElementById('backendResult');
+            try {
+                const response = await fetch('http://localhost:5000/');
+                const data = await response.json();
+                result.className = 'result success';
+                result.textContent = '✅ Backend is running!\n' + JSON.stringify(data, null, 2);
+            } catch (error) {
+                result.className = 'result error';
+                result.textContent = '❌ Backend is not running!\nError: ' + error.message + '\n\nPlease start your backend server first.';
+            }
+        }
+
+        async function checkItems() {
+            const result = document.getElementById('itemsResult');
+            try {
+                const response = await fetch('http://localhost:5000/api/items');
+                const data = await response.json();
+                result.className = 'result success';
+                result.textContent = `✅ Items API working!\nFound ${data.count || 0} items\n` + JSON.stringify(data, null, 2);
+            } catch (error) {
+                result.className = 'result error';
+                result.textContent = '❌ Items API failed!\nError: ' + error.message;
+            }
+        }
+
+        async function setupDemoData() {
+            const result = document.getElementById('setupResult');
+            result.className = 'result';
+            result.textContent = '⏳ Setting up demo data...';
+            
+            try {
+                const response = await fetch('http://localhost:5000/api/setup/demo-data', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    result.className = 'result success';
+                    result.textContent = '🎉 Demo data setup successful!\n' + JSON.stringify(data, null, 2);
+                } else {
+                    result.className = 'result error';
+                    result.textContent = '❌ Demo data setup failed!\n' + JSON.stringify(data, null, 2);
+                }
+            } catch (error) {
+                result.className = 'result error';
+                result.textContent = '❌ Demo data setup failed!\nError: ' + error.message;
+            }
+        }
+
+        async function checkFeatured() {
+            const result = document.getElementById('featuredResult');
+            try {
+                const response = await fetch('http://localhost:5000/api/items/featured');
+                const data = await response.json();
+                result.className = 'result success';
+                result.textContent = `✅ Featured items API working!\nFound ${data.count || 0} featured items\n` + JSON.stringify(data, null, 2);
+            } catch (error) {
+                result.className = 'result error';
+                result.textContent = '❌ Featured items API failed!\nError: ' + error.message;
+            }
+        }
+    </script>
+</body>
+</html>

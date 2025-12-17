@@ -212,6 +212,10 @@ app.use('/api/notifications', notificationRoutes);
 // Admin routes - mounted at /api/admin
 app.use('/api/admin', adminRoutes);
 
+// Setup routes - mounted at /api/setup (for demo data)
+const setupRoutes = require('./routes/setupRoutes');
+app.use('/api/setup', setupRoutes);
+
 // ============================================
 // API Documentation Endpoint
 // ============================================
