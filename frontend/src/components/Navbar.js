@@ -44,6 +44,16 @@ const Navbar = () => {
                 <i className="bi bi-grid me-1"></i> Items
               </Link>
             </li>
+            <li className="nav-item">
+              <Link to="/search-nearby" className="nav-link">
+                <i className="bi bi-geo-alt me-1"></i> Search Nearby
+              </Link>
+            </li>
+            <li className="nav-item">
+              <Link to="/ngos" className="nav-link">
+                <i className="bi bi-building me-1"></i> NGOs
+              </Link>
+            </li>
             {user && (
               <>
                 <li className="nav-item">
@@ -88,6 +98,14 @@ const Navbar = () => {
                     <Link to="/my-items" className="dropdown-item">
                       <i className="bi bi-box me-2"></i>My Items
                     </Link>
+                    <Link to="/ngo-verification" className="dropdown-item">
+                      <i className="bi bi-shield-check me-2"></i>NGO Verification
+                    </Link>
+                    {user.role === 'admin' && (
+                      <Link to="/admin" className="dropdown-item">
+                        <i className="bi bi-gear me-2"></i>Admin Dashboard
+                      </Link>
+                    )}
                     <div className="dropdown-divider"></div>
                     <button onClick={handleLogout} className="dropdown-item text-danger">
                       <i className="bi bi-box-arrow-right me-2"></i>Logout

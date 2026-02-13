@@ -66,6 +66,47 @@ export const validateRequired = (value) => {
 };
 
 /**
+ * Validate username format
+ * @param {string} username - Username
+ * @returns {object} - { isValid, message }
+ */
+export const validateUsername = (username) => {
+  if (!username) {
+    return { isValid: false, message: 'Username is required' };
+  }
+
+  if (username.length < 3) {
+    return { isValid: false, message: 'Username must be at least 3 characters' };
+  }
+
+  if (username.length > 50) {
+    return { isValid: false, message: 'Username must be less than 50 characters' };
+  }
+
+  // Allow alphanumeric characters and underscores only
+  const usernameRegex = /^[a-zA-Z0-9_]+$/;
+  if (!usernameRegex.test(username)) {
+    return { isValid: false, message: 'Username can only contain letters, numbers, and underscores' };
+  }
+
+  return { isValid: true, message: 'Username is valid' };
+};
+
+/**
+ * Validate required field with custom field name
+ * @param {any} value - Field value
+ * @param {string} fieldName - Name of the field for error message
+ * @returns {object} - { isValid, message }
+ */
+export const validateRequiredField = (value, fieldName) => {
+  const isValid = validateRequired(value);
+  return {
+    isValid,
+    message: isValid ? '' : `${fieldName} is required`
+  };
+};
+
+/**
  * Validate number range
  * @param {number} value - Number value
  * @param {number} min - Minimum value

@@ -13,7 +13,12 @@ import ItemDetail from './pages/ItemDetail';
 import ItemsList from './pages/ItemsList';
 import Favorites from './pages/Favorites';
 import Notifications from './pages/Notifications';
+import MyItems from './pages/MyItems';
 import APITest from './pages/APITest';
+import NGOVerification from './pages/NGOVerification';
+import NGOList from './pages/NGOList';
+import LocationBasedSearch from './components/LocationBasedSearch';
+import AdminDashboard from './pages/AdminDashboard';
 
 // Import Bootstrap CSS
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -59,6 +64,8 @@ function AppContent() {
         <Route path="/" element={<Home />} />
         <Route path="/items" element={<ItemsList />} />
         <Route path="/items/:id" element={<ItemDetail />} />
+        <Route path="/search-nearby" element={<LocationBasedSearch />} />
+        <Route path="/ngos" element={<NGOList />} />
         <Route path="/api-test" element={<APITest />} />
         
         {/* Auth Routes (redirect to dashboard if logged in) */}
@@ -100,7 +107,7 @@ function AppContent() {
           path="/my-items" 
           element={
             <ProtectedRoute>
-              <Dashboard />
+              <MyItems />
             </ProtectedRoute>
           } 
         />
@@ -141,6 +148,22 @@ function AppContent() {
           element={
             <ProtectedRoute>
               <Dashboard />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/ngo-verification" 
+          element={
+            <ProtectedRoute>
+              <NGOVerification />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/admin" 
+          element={
+            <ProtectedRoute>
+              <AdminDashboard />
             </ProtectedRoute>
           } 
         />

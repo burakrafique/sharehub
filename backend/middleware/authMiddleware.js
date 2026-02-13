@@ -1,258 +1,206 @@
-// ============================================
-// ShareHub Backend - Authentication Middleware
-// ============================================
-// This file contains middleware functions for JWT token verification
-// Middleware runs between receiving a request and sending a response
+const jwt = require('jsonwebtoken');
+const { promisePool } = require('../config/database');
 
 // ============================================
-// Import Required Packages
+// JWT Authentication Middleware (REQ-F-2, REQ-F-4)
+// Verifies JWT token and attaches user to request
 // ============================================
-const jwt = require('jsonwebtoken');  // JWT token verification library
 
-// ============================================
-// WHAT IS MIDDLEWARE?
-// ============================================
-// Middleware are functions that execute during the request-response cycle.
-// They sit "in the middle" between the client's request and the server's response.
-//
-// MIDDLEWARE IN EXPRESS:
-// ============================================
-// Express middleware functions have access to:
-// - req: The request object (contains data from client)
-// - res: The response object (used to send data to client)
-// - next: A function to pass control to the next middleware
-//
-// HOW MIDDLEWARE WORKS:
-// ============================================
-// 1. Client sends HTTP request → Express receives it
-// 2. Request flows through middleware functions (in order)
-// 3. Each middleware can:
-//    - Execute code (validate, log, modify)
-//    - Modify req/res objects
-//    - End the request-response cycle (send response)
-//    - Call next() to pass to next middleware
-// 4. After all middleware, request reaches route handler
-// 5. Route handler sends response → Client receives it
-//
-// MIDDLEWARE FLOW:
-// ============================================
-// Request
-//   ↓
-// Middleware 1 (CORS) → next()
-//   ↓
-// Middleware 2 (Body Parser) → next()
-//   ↓
-// Middleware 3 (Auth - THIS FILE) → next()
-//   ↓
-// Route Handler (Controller)
-//   ↓
-// Response
-//
-// TYPES OF MIDDLEWARE:
-// ============================================
-// 1. APPLICATION-LEVEL: Runs for every request
-//    Example: CORS, body parser, request logger
-//
-// 2. ROUTE-LEVEL: Runs for specific routes
-//    Example: Authentication middleware (this file)
-//    Usage: router.get('/profile', authMiddleware, controller)
-//
-// 3. ERROR HANDLING: Runs when error occurs
-//    Example: Global error handler
-//
-// WHAT THIS MIDDLEWARE DOES:
-// ============================================
-// This authentication middleware will:
-// 1. Extract JWT token from Authorization header
-// 2. Verify the token is valid (not expired, signature matches)
-// 3. Extract user data from token payload
-// 4. Attach user data to req.user
-// 5. Call next() to continue to route handler
-//
-// If token is invalid/missing:
-// - Return 401 Unauthorized error
-// - Stop request from reaching route handler
-//
-// PROTECTED ROUTES:
-// ============================================
-// Routes that require authentication use this middleware:
-//
-// router.get('/profile', verifyToken, getProfile);
-//                          ↑
-//                    This middleware
-//
-// Without valid token → 401 Unauthorized
-// With valid token → Request continues to getProfile controller
-
-/**
- * Verify JWT Token Middleware
- * 
- * This middleware function verifies JWT tokens in incoming requests.
- * It extracts the token from the Authorization header, verifies it,
- * and attaches user data to req.user for use in route handlers.
- * 
- * @param {Object} req - Express request object
- *   - req.headers.authorization: JWT token in "Bearer <token>" format
- * 
- * @param {Object} res - Express response object
- *   - Used to send error responses if token is invalid
- * 
- * @param {Function} next - Express next function
- *   - Call next() to pass control to next middleware/route handler
- *   - Call next(error) to pass error to error handler
- * 
- * @example
- * // Usage in routes:
- * router.get('/profile', verifyToken, getProfile);
- * 
- * // If token is valid:
- * // - req.user is set with user data
- * // - Request continues to getProfile controller
- * 
- * // If token is invalid:
- * // - Returns 401 Unauthorized
- * // - Request stops, doesn't reach getProfile
- */
-const verifyToken = (req, res, next) => {
-    // ============================================
-    // Step 1: Extract token from headers
-    // ============================================
-    // The JWT token is sent in the Authorization header
-    // Format: "Bearer <token>"
-    // Example: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-    //
-    // HOW IT WORKS:
-    // 1. Get Authorization header from req.headers.authorization
-    // 2. Check if header exists and starts with "Bearer "
-    // 3. Split by space to separate "Bearer" from the token
-    // 4. Get the second part (index 1) which is the actual token
-    
-    // Get the Authorization header
+const verifyToken = async (req, res, next) => {
+  try {
+    // Get token from Authorization header
     const authHeader = req.headers.authorization;
     
-    // Check if header exists and has the correct format
-    // We check for "Bearer " prefix to ensure proper format
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        // If no header or wrong format, return 401 Unauthorized
-        // We don't call next() because we're ending the request here
-        return res.status(401).json({
-            success: false,
-            message: 'No token, authorization denied'
-        });
+    if (!authHeader) {
+      return res.status(401).json({
+        success: false,
+        message: 'Access denied. No token provided.'
+      });
     }
-    
-    // Extract the token by splitting the header string
-    // "Bearer <token>" → split by space → ["Bearer", "<token>"]
-    // Get the second element (index 1) which is the token
-    const token = authHeader.split(' ')[1];
-    
-    // ============================================
-    // Step 2: Check if token exists
-    // ============================================
-    // After extracting, verify that we actually got a token
-    // This handles cases where header is "Bearer " with no token after it
+
+    // Extract token from "Bearer TOKEN" format
+    const token = authHeader.startsWith('Bearer ') 
+      ? authHeader.slice(7) 
+      : authHeader;
+
     if (!token) {
-        // If no token found, return 401 Unauthorized
-        // We don't call next() because we're ending the request here
-        return res.status(401).json({
-            success: false,
-            message: 'No token, authorization denied'
-        });
+      return res.status(401).json({
+        success: false,
+        message: 'Access denied. Invalid token format.'
+      });
+    }
+
+    // Verify JWT token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    
+    // Get user from database to ensure user still exists and is active
+    const [users] = await promisePool.execute(
+      'SELECT id, name, email, role, is_active FROM users WHERE id = ?',
+      [decoded.id]
+    );
+
+    if (users.length === 0) {
+      return res.status(401).json({
+        success: false,
+        message: 'Access denied. User not found.'
+      });
+    }
+
+    const user = users[0];
+
+    // Check if user account is active
+    if (!user.is_active) {
+      return res.status(401).json({
+        success: false,
+        message: 'Access denied. Account is deactivated.'
+      });
+    }
+
+    // Attach user information to request object
+    req.user = {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      is_active: user.is_active
+    };
+
+    // Log authentication for debugging (remove in production)
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`🔐 User authenticated: ${user.name} (${user.email}) - Role: ${user.role}`);
+    }
+
+    next();
+  } catch (error) {
+    // Handle specific JWT errors
+    if (error.name === 'JsonWebTokenError') {
+      return res.status(401).json({
+        success: false,
+        message: 'Access denied. Invalid token.'
+      });
     }
     
-    // ============================================
-    // Step 3: Verify token
-    // ============================================
-    // Use try-catch to handle verification errors
-    // jwt.verify() can throw errors if token is invalid or expired
-    try {
-        // Verify the token using jwt.verify()
-        // Parameters:
-        // 1. token: The JWT token to verify
-        // 2. process.env.JWT_SECRET: The secret key used to sign the token
-        // 
-        // WHAT jwt.verify() DOES:
-        // - Verifies the token signature (ensures it wasn't tampered with)
-        // - Checks if token has expired
-        // - Returns the decoded payload if valid
-        // - Throws an error if invalid or expired
-        //
-        // DECODED PAYLOAD:
-        // Contains the data we put in when creating the token (in authController)
-        // Example: { id: 1, email: "john@example.com", role: "user", iat: 1234567890, exp: 1234567890 }
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        
-        // ============================================
-        // Step 4: Attach user to request
-        // ============================================
-        // Attach the decoded token data to req.user
-        // This makes user data available in route handlers and controllers
-        // Controllers can access: req.user.id, req.user.email, req.user.role
-        req.user = decoded;
-        
-        // ============================================
-        // Step 5: Continue to next middleware/controller
-        // ============================================
-        // Call next() to pass control to the next middleware or route handler
-        // This allows the request to continue to the protected route
-        // Without next(), the request would hang and never complete
-        next();
-        
-    } catch (error) {
-        // ============================================
-        // Error Handling
-        // ============================================
-        // If token verification fails, jwt.verify() throws an error
-        // Common errors:
-        // - JsonWebTokenError: Token is malformed or signature is invalid
-        // - TokenExpiredError: Token has expired
-        // - NotBeforeError: Token is not yet valid
-        //
-        // We catch all these errors and return a generic error message
-        // This prevents attackers from knowing why the token failed
-        return res.status(401).json({
-            success: false,
-            message: 'Token is not valid'
-        });
+    if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({
+        success: false,
+        message: 'Access denied. Token expired.'
+      });
     }
+
+    console.error('❌ Authentication error:', error.message);
+    return res.status(500).json({
+      success: false,
+      message: 'Internal server error during authentication.'
+    });
+  }
 };
 
-/**
- * Role-based access control (RBAC) middleware
- *
- * @param {string[]} allowedRoles - Array of roles permitted to access the route
- * @returns {(req, res, next) => void}
- *
- * Usage example:
- * router.get('/admin-only', verifyToken, checkRole(['admin']), adminController);
- */
+// ============================================
+// Optional Authentication Middleware
+// Attaches user if token is valid, but doesn't require it
+// ============================================
+
+const optionalAuth = async (req, res, next) => {
+  try {
+    const authHeader = req.headers.authorization;
+    
+    if (!authHeader) {
+      req.user = null;
+      return next();
+    }
+
+    const token = authHeader.startsWith('Bearer ') 
+      ? authHeader.slice(7) 
+      : authHeader;
+
+    if (!token) {
+      req.user = null;
+      return next();
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    
+    const [users] = await promisePool.execute(
+      'SELECT id, name, email, role, is_active FROM users WHERE id = ? AND is_active = true',
+      [decoded.id]
+    );
+
+    if (users.length > 0) {
+      req.user = {
+        id: users[0].id,
+        name: users[0].name,
+        email: users[0].email,
+        role: users[0].role,
+        is_active: users[0].is_active
+      };
+    } else {
+      req.user = null;
+    }
+
+    next();
+  } catch (error) {
+    // If token is invalid, just set user to null and continue
+    req.user = null;
+    next();
+  }
+};
+
+// ============================================
+// Role-based Access Control Middleware
+// ============================================
+
 const checkRole = (allowedRoles) => {
-    return (req, res, next) => {
-        if (!req.user) {
-            return res.status(401).json({
-                success: false,
-                message: 'Authentication required'
-            });
-        }
+  return (req, res, next) => {
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: 'Authentication required'
+      });
+    }
 
-        if (!allowedRoles.includes(req.user.role)) {
-            return res.status(403).json({
-                success: false,
-                message: 'Access denied. Insufficient permissions.'
-            });
-        }
+    if (!allowedRoles.includes(req.user.role)) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied. Insufficient permissions.'
+      });
+    }
 
-        next();
-    };
+    next();
+  };
 };
 
 // ============================================
-// Export Middleware Function
+// Generate JWT Token Helper Function
 // ============================================
-// Export the verifyToken function so it can be used in routes
-// Usage in routes: const { verifyToken } = require('../middleware/authMiddleware');
+
+const generateToken = (user) => {
+  const payload = {
+    id: user.id,
+    email: user.email,
+    role: user.role
+  };
+
+  return jwt.sign(payload, process.env.JWT_SECRET, {
+    expiresIn: '24h' // 24 hour expiry as requested
+  });
+};
+
+// ============================================
+// Verify Token Helper Function (for password reset, etc.)
+// ============================================
+
+const verifyTokenOnly = (token) => {
+  try {
+    return jwt.verify(token, process.env.JWT_SECRET);
+  } catch (error) {
+    return null;
+  }
+};
+
 module.exports = {
-    verifyToken,
-    checkRole
+  verifyToken,
+  optionalAuth,
+  checkRole,
+  generateToken,
+  verifyTokenOnly
 };
-

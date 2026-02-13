@@ -1,27 +1,58 @@
 const express = require('express');
 const router = express.Router();
-const {
-  updateProfile,
-  changePassword,
-  getUserItems,
-  getUserProfile
-} = require('../controllers/userController');
 const { verifyToken } = require('../middleware/authMiddleware');
+const { uploadProfileImage } = require('../middleware/uploadMiddleware');
 
-// GET /api/users/profile/:userId - Get user profile (public)
-// Returns public user information and available items count
-router.get('/profile/:id', getUserProfile);
+// ============================================
+// ShareHub Backend - User Routes
+// Routes for user profile management and user-related operations
+// ============================================
 
-// PUT /api/users/profile - Update current user's profile (protected)
-// Body: name, phone, address, latitude, longitude
-router.put('/profile', verifyToken, updateProfile);
+// Import user controller (to be created)
+const {
+  getUserProfile,
+  updateUserProfile,
+  uploadProfilePicture,
+  getUserItems,
+  getUserStats,
+  deactivateAccount,
+  changePassword
+} = require('../controllers/userController');
 
-// PUT /api/users/change-password - Change password (protected)
-// Body: currentPassword, newPassword
+// ============================================
+// User Profile Routes
+// ============================================
+
+// GET /api/users/profile - Get current user's profile
+router.get('/profile', verifyToken, getUserProfile);
+
+// PUT /api/users/profile - Update current user's profile
+router.put('/profile', verifyToken, updateUserProfile);
+
+// POST /api/users/profile/image - Upload profile picture
+router.post('/profile/image', verifyToken, uploadProfileImage, uploadProfilePicture);
+
+// GET /api/users/my-items - Get current user's items
+router.get('/my-items', verifyToken, getUserItems);
+
+// GET /api/users/stats - Get user statistics
+router.get('/stats', verifyToken, getUserStats);
+
+// ============================================
+// Account Management Routes
+// ============================================
+
+// PUT /api/users/change-password - Change password
 router.put('/change-password', verifyToken, changePassword);
 
-// GET /api/users/my-items - Get current user's items (protected)
-// Returns all items created by the authenticated user
-router.get('/my-items', verifyToken, getUserItems);
+// DELETE /api/users/deactivate - Deactivate account
+router.delete('/deactivate', verifyToken, deactivateAccount);
+
+// ============================================
+// Public User Routes
+// ============================================
+
+// GET /api/users/:id - Get public user profile
+router.get('/:id', getUserProfile);
 
 module.exports = router;

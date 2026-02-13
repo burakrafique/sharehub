@@ -4,10 +4,11 @@ const {
   createItem,
   getAllItems,
   getItemById,
+  getMyItems,
   updateItem,
   deleteItem,
   getNearbyItems,
-  getUserItems,
+  searchItems,
   deleteItemImage,
   setPrimaryImage,
   advancedSearch,
@@ -15,41 +16,33 @@ const {
 } = require('../controllers/itemController');
 const { verifyToken } = require('../middleware/authMiddleware');
 const { uploadImages } = require('../middleware/uploadMiddleware');
+const { createItemValidation } = require('../middleware/validationRules');
 
 // POST /api/items - Create new item (protected, with image upload)
-// Requires authentication and accepts up to 5 images
-router.post('/', verifyToken, uploadImages, createItem);
+router.post('/', verifyToken, uploadImages, createItemValidation, createItem);
 
-// GET /api/items - Get all items with optional filters (public)
-// Query params: category, listing_type, status, search
+// GET /api/items - Get all items with pagination and filters (public)
 router.get('/', getAllItems);
 
-// GET /api/items/search - Advanced search with filters and sorting (public)
-// Query params: category, listing_type, min_price, max_price, condition, sort_by, order, search
-router.get('/search', advancedSearch);
+// GET /api/items/search - Search items with text and location (public)
+router.get('/search', searchItems);
+
+// GET /api/items/my-items - Get current user's items (protected)
+router.get('/my-items', verifyToken, getMyItems);
 
 // GET /api/items/nearby - Get nearby items based on location (public)
-// Query params: latitude, longitude, radius (optional, default 10km)
 router.get('/nearby', getNearbyItems);
 
-// GET /api/items/user/:userId - Get all items by specific user (public)
-// Params: userId
-router.get('/user/:userId', getUserItems);
-
 // GET /api/items/:id - Get single item by ID (public)
-// Params: id
 router.get('/:id', getItemById);
 
 // PUT /api/items/:id - Update item (protected, owner only)
-// Requires authentication, only item owner can update
 router.put('/:id', verifyToken, updateItem);
 
-// PUT /api/items/:id/status - Update item status (protected, owner only)
-// Body: status (available, pending, sold, completed), buyer_id (required for completed/sold)
-router.put('/:id/status', verifyToken, updateItemStatus);
+// PATCH /api/items/:id/status - Update item status (protected, owner only)
+router.patch('/:id/status', verifyToken, updateItemStatus);
 
 // DELETE /api/items/:id - Delete item (protected, owner only)
-// Requires authentication, only item owner can delete
 router.delete('/:id', verifyToken, deleteItem);
 
 // DELETE /api/items/images/:imageId - Delete item image (protected, owner only)

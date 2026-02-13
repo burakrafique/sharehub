@@ -1,8 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import itemService from '../services/itemService';
 import messageService from '../services/messageService';
+import favoriteService from '../services/favoriteService';
+import ItemCard from '../components/ItemCard';
+import LoadingSpinner from '../components/LoadingSpinner';
+import './ItemDetail.css';
 
 const ItemDetail = () => {
   const { id } = useParams();

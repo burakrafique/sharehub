@@ -1,100 +1,35 @@
 import { useState, useEffect } from 'react';
-import { Card, Form, Button, Badge, Accordion, InputGroup } from 'react-bootstrap';
-import { FaFilter, FaTimes, FaMapMarkerAlt } from 'react-icons/fa';
 import './FilterSidebar.css';
 
-const FilterSidebar = ({ onFilterChange, initialFilters = {} }) => {
-  const [filters, setFilters] = useState({
-    categories: initialFilters.categories || [],
-    listingType: initialFilters.listingType || '',
-    minPrice: initialFilters.minPrice || '',
-    maxPrice: initialFilters.maxPrice || '',
-    condition: initialFilters.condition || '',
-    locationRadius: initialFilters.locationRadius || '',
-    sortBy: initialFilters.sortBy || 'newest'
-  });
-
-  const [activeFiltersCount, setActiveFiltersCount] = useState(0);
+const FilterSidebar = ({ 
+  filters, 
+  onFilterChange, 
+  onClearFilters, 
+  activeFiltersCount = 0,
+  isMobile = false 
+}) => {
+  const [localFilters, setLocalFilters] = useState(filters);
 
   useEffect(() => {
-    // Count active filters
-    let count = 0;
-    if (filters.categories.length > 0) count++;
-    if (filters.listingType) count++;
-    if (filters.minPrice || filters.maxPrice) count++;
-    if (filters.condition) count++;
-    if (filters.locationRadius) count++;
-    setActiveFiltersCount(count);
+    setLocalFilters(filters);
   }, [filters]);
 
-  const handleCategoryChange = (category) => {
-    const newCategories = filters.categories.includes(category)
-      ? filters.categories.filter(c => c !== category)
-      : [...filters.categories, category];
-    
-    updateFilter('categories', newCategories);
-  };
-
-  const handleListingTypeChange = (type) => {
-    updateFilter('listingType', filters.listingType === type ? '' : type);
-  };
-
-  const handlePriceChange = (field, value) => {
-    updateFilter(field, value);
-  };
-
-  const handleConditionChange = (e) => {
-    updateFilter('condition', e.target.value);
-  };
-
-  const handleLocationRadiusChange = (e) => {
-    updateFilter('locationRadius', e.target.value);
-  };
-
-  const handleSortChange = (e) => {
-    updateFilter('sortBy', e.target.value);
-  };
-
-  const updateFilter = (key, value) => {
-    const newFilters = { ...filters, [key]: value };
-    setFilters(newFilters);
-  };
-
-  const handleApplyFilters = () => {
-    if (onFilterChange) {
-      onFilterChange(filters);
-    }
-  };
-
-  const handleClearFilters = () => {
-    const clearedFilters = {
-      categories: [],
-      listingType: '',
-      minPrice: '',
-      maxPrice: '',
-      condition: '',
-      locationRadius: '',
-      sortBy: 'newest'
-    };
-    setFilters(clearedFilters);
-    if (onFilterChange) {
-      onFilterChange(clearedFilters);
-    }
+  const handleFilterChange = (key, value) => {
+    const newFilters = { ...localFilters, [key]: value };
+    setLocalFilters(newFilters);
+    onFilterChange(key, value);
   };
 
   const categories = [
     { value: 'clothes', label: 'Clothes', icon: '👕' },
     { value: 'books', label: 'Books', icon: '📚' },
-    { value: 'ration', label: 'Ration', icon: '🍱' },
-    { value: 'electronics', label: 'Electronics', icon: '💻' },
-    { value: 'furniture', label: 'Furniture', icon: '🪑' },
-    { value: 'other', label: 'Other', icon: '📦' }
+    { value: 'ration', label: 'Ration', icon: '🍱' }
   ];
 
   const listingTypes = [
-    { value: 'sell', label: 'For Sale', icon: '💰' },
-    { value: 'donate', label: 'Donation', icon: '🎁' },
-    { value: 'exchange', label: 'Exchange', icon: '🔄' }
+    { value: 'sell', label: 'For Sale', color: 'success' },
+    { value: 'donate', label: 'Donation', color: 'primary' },
+    { value: 'swap', label: 'Swap', color: 'warning' }
   ];
 
   const conditions = [
@@ -102,256 +37,156 @@ const FilterSidebar = ({ onFilterChange, initialFilters = {} }) => {
     { value: 'new', label: 'New' },
     { value: 'like_new', label: 'Like New' },
     { value: 'good', label: 'Good' },
-    { value: 'fair', label: 'Fair' },
-    { value: 'poor', label: 'Poor' }
-  ];
-
-  const sortOptions = [
-    { value: 'newest', label: 'Newest First' },
-    { value: 'oldest', label: 'Oldest First' },
-    { value: 'price_low', label: 'Price: Low to High' },
-    { value: 'price_high', label: 'Price: High to Low' },
-    { value: 'title_asc', label: 'Title: A to Z' },
-    { value: 'title_desc', label: 'Title: Z to A' }
+    { value: 'fair', label: 'Fair' }
   ];
 
   return (
-    <Card className="filter-sidebar shadow-sm sticky-top" style={{ top: '80px' }}>
-      <Card.Header className="bg-primary text-white d-flex justify-content-between align-items-center">
-        <div>
-          <FaFilter className="me-2" />
-          <strong>Filters</strong>
+    <div className={`card border-0 shadow-sm ${!isMobile ? 'sticky-top' : ''}`} style={{ top: '80px' }}>
+      <div className="card-header bg-primary text-white">
+        <div className="d-flex justify-content-between align-items-center">
+          <h5 className="mb-0">
+            <i className="bi bi-funnel me-2"></i>
+            Filters
+          </h5>
           {activeFiltersCount > 0 && (
-            <Badge bg="light" text="dark" className="ms-2">
+            <span className="badge bg-light text-primary">
               {activeFiltersCount}
-            </Badge>
+            </span>
           )}
         </div>
-        {activeFiltersCount > 0 && (
-          <Button 
-            variant="light" 
-            size="sm"
-            onClick={handleClearFilters}
-            title="Clear all filters"
+      </div>
+      
+      <div className="card-body">
+        {/* Category Filter */}
+        <div className="mb-4">
+          <label className="form-label fw-semibold">
+            <i className="bi bi-tag me-1"></i>
+            Category
+          </label>
+          <select
+            className="form-select"
+            value={localFilters.category || ''}
+            onChange={(e) => handleFilterChange('category', e.target.value)}
           >
-            <FaTimes />
-          </Button>
-        )}
-      </Card.Header>
+            <option value="">All Categories</option>
+            {categories.map((category) => (
+              <option key={category.value} value={category.value}>
+                {category.icon} {category.label}
+              </option>
+            ))}
+          </select>
+        </div>
 
-      <Card.Body className="filter-sidebar-body">
-        <Accordion defaultActiveKey={['0', '1']} alwaysOpen>
-          {/* Category Filter */}
-          <Accordion.Item eventKey="0">
-            <Accordion.Header>
-              <strong>Category</strong>
-              {filters.categories.length > 0 && (
-                <Badge bg="primary" className="ms-2">
-                  {filters.categories.length}
-                </Badge>
-              )}
-            </Accordion.Header>
-            <Accordion.Body>
-              {categories.map((category) => (
-                <Form.Check
-                  key={category.value}
-                  type="checkbox"
-                  id={`category-${category.value}`}
-                  label={
-                    <span>
-                      <span className="me-2">{category.icon}</span>
-                      {category.label}
-                    </span>
-                  }
-                  checked={filters.categories.includes(category.value)}
-                  onChange={() => handleCategoryChange(category.value)}
-                  className="mb-2"
-                />
-              ))}
-            </Accordion.Body>
-          </Accordion.Item>
-
-          {/* Listing Type Filter */}
-          <Accordion.Item eventKey="1">
-            <Accordion.Header>
-              <strong>Listing Type</strong>
-              {filters.listingType && (
-                <Badge bg="primary" className="ms-2">1</Badge>
-              )}
-            </Accordion.Header>
-            <Accordion.Body>
-              {listingTypes.map((type) => (
-                <Form.Check
-                  key={type.value}
+        {/* Listing Type Filter */}
+        <div className="mb-4">
+          <label className="form-label fw-semibold">
+            <i className="bi bi-list-ul me-1"></i>
+            Listing Type
+          </label>
+          <div className="d-flex flex-column gap-2">
+            <div className="form-check">
+              <input
+                className="form-check-input"
+                type="radio"
+                name="listing_type"
+                id="all_types"
+                checked={!localFilters.listing_type}
+                onChange={() => handleFilterChange('listing_type', '')}
+              />
+              <label className="form-check-label" htmlFor="all_types">
+                All Types
+              </label>
+            </div>
+            {listingTypes.map((type) => (
+              <div key={type.value} className="form-check">
+                <input
+                  className="form-check-input"
                   type="radio"
-                  id={`type-${type.value}`}
-                  name="listingType"
-                  label={
-                    <span>
-                      <span className="me-2">{type.icon}</span>
-                      {type.label}
-                    </span>
-                  }
-                  checked={filters.listingType === type.value}
-                  onChange={() => handleListingTypeChange(type.value)}
-                  className="mb-2"
+                  name="listing_type"
+                  id={type.value}
+                  checked={localFilters.listing_type === type.value}
+                  onChange={() => handleFilterChange('listing_type', type.value)}
                 />
-              ))}
-              {filters.listingType && (
-                <Button 
-                  variant="link" 
-                  size="sm" 
-                  className="p-0 text-decoration-none"
-                  onClick={() => handleListingTypeChange('')}
-                >
-                  Clear selection
-                </Button>
-              )}
-            </Accordion.Body>
-          </Accordion.Item>
-
-          {/* Price Range Filter */}
-          <Accordion.Item eventKey="2">
-            <Accordion.Header>
-              <strong>Price Range</strong>
-              {(filters.minPrice || filters.maxPrice) && (
-                <Badge bg="primary" className="ms-2">1</Badge>
-              )}
-            </Accordion.Header>
-            <Accordion.Body>
-              <Form.Group className="mb-3">
-                <Form.Label className="small">Minimum Price (Rs.)</Form.Label>
-                <Form.Control
-                  type="number"
-                  placeholder="Min"
-                  value={filters.minPrice}
-                  onChange={(e) => handlePriceChange('minPrice', e.target.value)}
-                  min="0"
-                />
-              </Form.Group>
-              <Form.Group className="mb-3">
-                <Form.Label className="small">Maximum Price (Rs.)</Form.Label>
-                <Form.Control
-                  type="number"
-                  placeholder="Max"
-                  value={filters.maxPrice}
-                  onChange={(e) => handlePriceChange('maxPrice', e.target.value)}
-                  min="0"
-                />
-              </Form.Group>
-              {(filters.minPrice || filters.maxPrice) && (
-                <div className="text-center">
-                  <Badge bg="info">
-                    {filters.minPrice && `Rs. ${filters.minPrice}`}
-                    {filters.minPrice && filters.maxPrice && ' - '}
-                    {filters.maxPrice && `Rs. ${filters.maxPrice}`}
-                  </Badge>
-                </div>
-              )}
-            </Accordion.Body>
-          </Accordion.Item>
-
-          {/* Condition Filter */}
-          <Accordion.Item eventKey="3">
-            <Accordion.Header>
-              <strong>Condition</strong>
-              {filters.condition && (
-                <Badge bg="primary" className="ms-2">1</Badge>
-              )}
-            </Accordion.Header>
-            <Accordion.Body>
-              <Form.Select
-                value={filters.condition}
-                onChange={handleConditionChange}
-                size="sm"
-              >
-                {conditions.map((condition) => (
-                  <option key={condition.value} value={condition.value}>
-                    {condition.label}
-                  </option>
-                ))}
-              </Form.Select>
-            </Accordion.Body>
-          </Accordion.Item>
-
-          {/* Location Radius Filter */}
-          <Accordion.Item eventKey="4">
-            <Accordion.Header>
-              <strong>
-                <FaMapMarkerAlt className="me-2" />
-                Location Radius
-              </strong>
-              {filters.locationRadius && (
-                <Badge bg="primary" className="ms-2">1</Badge>
-              )}
-            </Accordion.Header>
-            <Accordion.Body>
-              <Form.Group>
-                <Form.Label className="small">
-                  Within {filters.locationRadius || '0'} km
-                </Form.Label>
-                <Form.Range
-                  value={filters.locationRadius}
-                  onChange={handleLocationRadiusChange}
-                  min="0"
-                  max="100"
-                  step="5"
-                />
-                <div className="d-flex justify-content-between small text-muted">
-                  <span>0 km</span>
-                  <span>50 km</span>
-                  <span>100 km</span>
-                </div>
-              </Form.Group>
-              <Form.Text className="text-muted">
-                Set to 0 to disable location filter
-              </Form.Text>
-            </Accordion.Body>
-          </Accordion.Item>
-
-          {/* Sort By */}
-          <Accordion.Item eventKey="5">
-            <Accordion.Header>
-              <strong>Sort By</strong>
-            </Accordion.Header>
-            <Accordion.Body>
-              <Form.Select
-                value={filters.sortBy}
-                onChange={handleSortChange}
-                size="sm"
-              >
-                {sortOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </Form.Select>
-            </Accordion.Body>
-          </Accordion.Item>
-        </Accordion>
-      </Card.Body>
-
-      <Card.Footer className="bg-light">
-        <div className="d-grid gap-2">
-          <Button 
-            variant="primary" 
-            onClick={handleApplyFilters}
-            disabled={activeFiltersCount === 0 && filters.sortBy === 'newest'}
-          >
-            Apply Filters
-          </Button>
-          {activeFiltersCount > 0 && (
-            <Button 
-              variant="outline-secondary" 
-              onClick={handleClearFilters}
-            >
-              <FaTimes className="me-2" />
-              Clear All
-            </Button>
-          )}
+                <label className="form-check-label" htmlFor={type.value}>
+                  <span className={`badge bg-${type.color} me-2`}>
+                    {type.value.toUpperCase()}
+                  </span>
+                  {type.label}
+                </label>
+              </div>
+            ))}
+          </div>
         </div>
-      </Card.Footer>
-    </Card>
+
+        {/* Condition Filter */}
+        <div className="mb-4">
+          <label className="form-label fw-semibold">
+            <i className="bi bi-star me-1"></i>
+            Condition
+          </label>
+          <select
+            className="form-select"
+            value={localFilters.condition || ''}
+            onChange={(e) => handleFilterChange('condition', e.target.value)}
+          >
+            {conditions.map((condition) => (
+              <option key={condition.value} value={condition.value}>
+                {condition.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Price Range Filter */}
+        {localFilters.listing_type !== 'donate' && (
+          <div className="mb-4">
+            <label className="form-label fw-semibold">
+              <i className="bi bi-currency-dollar me-1"></i>
+              Price Range (Rs.)
+            </label>
+            <div className="row g-2">
+              <div className="col-6">
+                <input
+                  type="number"
+                  className="form-control"
+                  placeholder="Min"
+                  value={localFilters.minPrice || ''}
+                  onChange={(e) => handleFilterChange('minPrice', e.target.value)}
+                  min="0"
+                />
+              </div>
+              <div className="col-6">
+                <input
+                  type="number"
+                  className="form-control"
+                  placeholder="Max"
+                  value={localFilters.maxPrice || ''}
+                  onChange={(e) => handleFilterChange('maxPrice', e.target.value)}
+                  min="0"
+                />
+              </div>
+            </div>
+            {(localFilters.minPrice || localFilters.maxPrice) && (
+              <div className="mt-2 text-center">
+                <small className="text-muted">
+                  Rs. {localFilters.minPrice || '0'} - Rs. {localFilters.maxPrice || '∞'}
+                </small>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Clear Filters Button */}
+        <button
+          className="btn btn-outline-secondary w-100"
+          onClick={onClearFilters}
+          disabled={activeFiltersCount === 0}
+        >
+          <i className="bi bi-x-circle me-2"></i>
+          Clear All Filters
+        </button>
+      </div>
+    </div>
   );
 };
 

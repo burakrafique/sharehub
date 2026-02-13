@@ -38,6 +38,30 @@ const Home = () => {
     return () => clearInterval(interval);
   }, []);
 
+  // Intersection Observer for smooth section animations
+  useEffect(() => {
+    const observerOptions = {
+      threshold: 0.1,
+      rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('in-view');
+        }
+      });
+    }, observerOptions);
+
+    // Observe all sections with animation class
+    const animatedSections = document.querySelectorAll('.section-animate');
+    animatedSections.forEach((section) => observer.observe(section));
+
+    return () => {
+      animatedSections.forEach((section) => observer.unobserve(section));
+    };
+  }, []);
+
   return (
     <div className="home-page">
       {/* Hero Slider */}
@@ -45,70 +69,99 @@ const Home = () => {
         {slides.map((slide, index) => (
           <div
             key={index}
-            className={`slide ${index === currentSlide ? 'active' : ''}`}
+            className={`hero-slide ${index === currentSlide ? 'active' : ''}`}
             style={{ backgroundImage: `url(${slide.image})` }}
           >
-            <div className="slide-overlay"></div>
-            <div className="container">
-              <div className="slide-content">
-                <h1 className="display-3 fw-bold text-white mb-3" data-aos="fade-up">
-                  {slide.title}
-                </h1>
-                <p className="lead text-white mb-4" data-aos="fade-up" data-aos-delay="100">
-                  {slide.subtitle}
-                </p>
-                <Link
-                  to={slide.link}
-                  className="btn btn-light btn-lg px-5 py-3"
-                  data-aos="fade-up"
-                  data-aos-delay="200"
-                >
-                  {slide.cta}
-                  <i className="bi bi-arrow-right ms-2"></i>
-                </Link>
+            <div className="hero-overlay"></div>
+            <div className="container h-100">
+              <div className="row h-100 align-items-center">
+                <div className="col-lg-8 col-xl-7">
+                  <div className="hero-content">
+                    <h1 className="hero-title text-white mb-3">
+                      {slide.title}
+                    </h1>
+                    <p className="hero-subtitle text-white mb-4">
+                      {slide.subtitle}
+                    </p>
+                    <Link
+                      to={slide.link}
+                      className={slide.link === '/register' ? 'cta-primary' : 'cta-secondary'}
+                    >
+                      {slide.cta}
+                      <i className="bi bi-arrow-right ms-2"></i>
+                    </Link>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         ))}
 
         {/* Slider Controls */}
-        <div className="slider-dots">
+        <div className="hero-dots">
           {slides.map((_, index) => (
             <button
               key={index}
-              className={`dot ${index === currentSlide ? 'active' : ''}`}
+              className={`hero-dot ${index === currentSlide ? 'active' : ''}`}
               onClick={() => setCurrentSlide(index)}
+              aria-label={`Go to slide ${index + 1}`}
             />
           ))}
         </div>
       </section>
 
-      {/* Quick Search */}
-      <section className="quick-search-section py-4 bg-light">
+      {/* Search Section */}
+      <section className="search-section section-animate">
         <div className="container">
-          <div className="row align-items-center">
-            <div className="col-md-8">
-              <div className="input-group input-group-lg">
-                <span className="input-group-text bg-white">
-                  <i className="bi bi-search"></i>
-                </span>
-                <input
-                  type="text"
-                  className="form-control"
-                  placeholder="Search for clothes, books, ration items..."
-                />
-                <button className="btn btn-primary px-5">Search</button>
+          <div className="search-wrapper">
+            <div className="row align-items-center g-4">
+              <div className="col-lg-8">
+                <div className="search-header mb-3">
+                  <h3 className="search-title">Find What You Need</h3>
+                  <p className="search-subtitle">Search through thousands of items in your area</p>
+                </div>
+                <div className="search-input-wrapper">
+                  <div className="input-group">
+                    <span className="input-group-text">
+                      <i className="bi bi-search"></i>
+                    </span>
+                    <input
+                      type="text"
+                      className="form-control"
+                      placeholder="Search for clothes, books, ration items..."
+                    />
+                    <button className="cta-secondary">
+                      <i className="bi bi-search me-2"></i>
+                      Search
+                    </button>
+                  </div>
+                </div>
               </div>
-            </div>
-            <div className="col-md-4 text-end">
-              <span className="text-muted">Over 5,000+ items available</span>
+              <div className="col-lg-4">
+                <div className="search-stats">
+                  <div className="stat-item">
+                    <i className="bi bi-check-circle-fill text-success"></i>
+                    <div className="stat-content">
+                      <div className="stat-number">5,000+</div>
+                      <div className="stat-label">Items Available</div>
+                    </div>
+                  </div>
+                  <div className="stat-item">
+                    <i className="bi bi-people-fill text-primary"></i>
+                    <div className="stat-content">
+                      <div className="stat-number">1,000+</div>
+                      <div className="stat-label">Active Users</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
       {/* Features Section */}
-      <section className="features-section py-5">
+      <section className="features-section section-animate delay-1">
         <div className="container">
           <div className="row g-4">
             <div className="col-md-3 text-center">
@@ -143,85 +196,89 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Categories with Images */}
-      <section className="categories-section py-5 bg-light">
-        <div className="container">
-          <div className="text-center mb-5">
-            <h2 className="display-5 fw-bold mb-3">Browse by Category</h2>
-            <p className="lead text-muted">Find exactly what you're looking for</p>
+      {/* Categories Section */}
+      <section className="categories-section section-animate delay-2">
+        <div className="categories-container">
+          <div className="categories-header">
+            <h2 className="categories-title">Browse by Category</h2>
+            <p className="categories-subtitle">Find exactly what you're looking for</p>
           </div>
-          <div className="row g-4">
+          
+          <div className="categories-grid">
             {/* Clothes */}
-            <div className="col-md-4">
-              <Link to="/items?category=clothes" className="text-decoration-none">
-                <div className="category-card position-relative overflow-hidden rounded-4">
+            <Link to="/items?category=clothes" className="category-link">
+              <article className="category-card">
+                <div className="category-image-wrapper">
                   <img
                     src="https://images.unsplash.com/photo-1489987707025-afc232f7ea0f"
-                    alt="Clothes"
-                    className="w-100"
-                    style={{ height: '300px', objectFit: 'cover' }}
+                    alt="Clothes Category"
+                    className="category-image"
                   />
-                  <div className="category-overlay">
-                    <div className="category-content">
-                      <i className="bi bi-bag fs-1 text-white mb-3"></i>
-                      <h3 className="text-white fw-bold">Clothes</h3>
-                      <p className="text-white mb-3">Fashion for everyone</p>
-                      <span className="btn btn-light">Browse Now</span>
+                </div>
+                <div className="category-overlay">
+                  <div className="category-content">
+                    <div className="category-icon">
+                      <i className="bi bi-bag"></i>
                     </div>
+                    <h3 className="category-title">Clothes</h3>
+                    <p className="category-description">Fashion for everyone</p>
+                    <span className="cta-tertiary">Browse Now</span>
                   </div>
                 </div>
-              </Link>
-            </div>
+              </article>
+            </Link>
 
             {/* Books */}
-            <div className="col-md-4">
-              <Link to="/items?category=books" className="text-decoration-none">
-                <div className="category-card position-relative overflow-hidden rounded-4">
+            <Link to="/items?category=books" className="category-link">
+              <article className="category-card">
+                <div className="category-image-wrapper">
                   <img
                     src="https://images.unsplash.com/photo-1495446815901-a7297e633e8d"
-                    alt="Books"
-                    className="w-100"
-                    style={{ height: '300px', objectFit: 'cover' }}
+                    alt="Books Category"
+                    className="category-image"
                   />
-                  <div className="category-overlay">
-                    <div className="category-content">
-                      <i className="bi bi-book fs-1 text-white mb-3"></i>
-                      <h3 className="text-white fw-bold">Books</h3>
-                      <p className="text-white mb-3">Knowledge for all</p>
-                      <span className="btn btn-light">Browse Now</span>
+                </div>
+                <div className="category-overlay">
+                  <div className="category-content">
+                    <div className="category-icon">
+                      <i className="bi bi-book"></i>
                     </div>
+                    <h3 className="category-title">Books</h3>
+                    <p className="category-description">Knowledge for all</p>
+                    <span className="cta-tertiary">Browse Now</span>
                   </div>
                 </div>
-              </Link>
-            </div>
+              </article>
+            </Link>
 
             {/* Ration */}
-            <div className="col-md-4">
-              <Link to="/items?category=ration" className="text-decoration-none">
-                <div className="category-card position-relative overflow-hidden rounded-4">
+            <Link to="/items?category=ration" className="category-link">
+              <article className="category-card">
+                <div className="category-image-wrapper">
                   <img
                     src="https://images.unsplash.com/photo-1542838132-92c53300491e"
-                    alt="Ration"
-                    className="w-100"
-                    style={{ height: '300px', objectFit: 'cover' }}
+                    alt="Ration Category"
+                    className="category-image"
                   />
-                  <div className="category-overlay">
-                    <div className="category-content">
-                      <i className="bi bi-basket fs-1 text-white mb-3"></i>
-                      <h3 className="text-white fw-bold">Ration</h3>
-                      <p className="text-white mb-3">Help feed families</p>
-                      <span className="btn btn-light">Browse Now</span>
+                </div>
+                <div className="category-overlay">
+                  <div className="category-content">
+                    <div className="category-icon">
+                      <i className="bi bi-basket"></i>
                     </div>
+                    <h3 className="category-title">Ration</h3>
+                    <p className="category-description">Help feed families</p>
+                    <span className="cta-tertiary">Browse Now</span>
                   </div>
                 </div>
-              </Link>
-            </div>
+              </article>
+            </Link>
           </div>
         </div>
       </section>
 
       {/* Stats Section */}
-      <section className="stats-section py-5 bg-primary text-white">
+      <section className="stats-section section-animate delay-3 text-white">
         <div className="container">
           <div className="row text-center g-4">
             <div className="col-md-3">
@@ -245,17 +302,17 @@ const Home = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="cta-section py-5">
+      <section className="cta-section section-animate">
         <div className="container text-center">
           <h2 className="display-5 fw-bold mb-4">Ready to Make a Difference?</h2>
           <p className="lead text-muted mb-4">
             Join thousands of users sharing, selling, and donating items
           </p>
-          <div className="d-flex gap-3 justify-content-center">
-            <Link to="/register" className="btn btn-primary btn-lg px-5">
-              Get Started Free
+          <div className="cta-group">
+            <Link to="/register" className="cta-primary cta-large">
+              Start Sharing
             </Link>
-            <Link to="/items" className="btn btn-outline-primary btn-lg px-5">
+            <Link to="/items" className="cta-primary cta-large">
               Browse Items
             </Link>
           </div>

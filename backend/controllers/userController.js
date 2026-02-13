@@ -160,9 +160,122 @@ const getUserProfile = async (req, res, next) => {
   }
 };
 
+// Upload profile picture
+const uploadProfilePicture = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please select an image to upload'
+      });
+    }
+
+    const profileImageUrl = `/uploads/profiles/${req.file.filename}`;
+
+    // Update user's profile image in database
+    const updatedUser = await User.update(userId, { profile_image: profileImageUrl });
+
+    if (!updatedUser) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Profile picture updated successfully',
+      data: {
+        profile_image: profileImageUrl
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Get user statistics
+const getUserStats = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+
+    // Get user's items count by status
+    const items = await Item.findByUserId(userId);
+    
+    const stats = {
+      totalItems: items.length,
+      availableItems: items.filter(item => item.status === 'available').length,
+      soldItems: items.filter(item => item.status === 'sold').length,
+      pendingItems: items.filter(item => item.status === 'pending').length,
+      completedItems: items.filter(item => item.status === 'completed').length
+    };
+
+    res.status(200).json({
+      success: true,
+      data: stats
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Deactivate user account
+const deactivateAccount = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+    const { password } = req.body;
+
+    if (!password) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide your password to deactivate account'
+      });
+    }
+
+    // Find user and verify password
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // Verify password
+    const isPasswordValid = await bcrypt.compare(password, user.password_hash);
+
+    if (!isPasswordValid) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid password'
+      });
+    }
+
+    // Deactivate account (soft delete)
+    await User.update(userId, { is_active: false });
+
+    res.status(200).json({
+      success: true,
+      message: 'Account deactivated successfully'
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Update user profile (alias for updateProfile)
+const updateUserProfile = updateProfile;
+
 module.exports = {
   updateProfile,
+  updateUserProfile,
   changePassword,
   getUserItems,
-  getUserProfile
+  getUserProfile,
+  uploadProfilePicture,
+  getUserStats,
+  deactivateAccount
 };

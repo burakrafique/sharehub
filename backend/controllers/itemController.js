@@ -63,7 +63,7 @@ const createItem = async (req, res, next) => {
       longitude: parseFloat(longitude)
     };
 
-    const newItem = await Item.create(itemData);
+    const newItem = await Item.createItem(itemData);
 
     // Save uploaded images to item_images table
     if (req.files && req.files.length > 0) {
@@ -91,23 +91,43 @@ const createItem = async (req, res, next) => {
   }
 };
 
-// Get all items with optional filters
+// Get all items with pagination and filters
 const getAllItems = async (req, res, next) => {
   try {
-    const { category, listing_type, status, search } = req.query;
+    const {
+      page = 1,
+      limit = 12,
+      category,
+      listing_type,
+      condition,
+      min_price,
+      max_price,
+      status,
+      sortBy,
+      order,
+      search
+    } = req.query;
 
-    const filters = {};
-    if (category) filters.category = category;
-    if (listing_type) filters.listing_type = listing_type;
-    if (status) filters.status = status;
-    if (search) filters.search = search;
+    const filters = {
+      page: parseInt(page),
+      limit: parseInt(limit),
+      category,
+      listing_type,
+      condition,
+      min_price,
+      max_price,
+      status,
+      sortBy,
+      order,
+      search
+    };
 
-    const items = await Item.findAll(filters);
+    const result = await Item.findAll(filters);
 
     res.status(200).json({
       success: true,
-      count: items.length,
-      data: items
+      data: result.items,
+      pagination: result.pagination
     });
   } catch (error) {
     next(error);
@@ -127,6 +147,9 @@ const getItemById = async (req, res, next) => {
         message: 'Item not found'
       });
     }
+
+    // Increment views count
+    await Item.incrementViews(id);
 
     res.status(200).json({
       success: true,
@@ -161,7 +184,7 @@ const updateItem = async (req, res, next) => {
     }
 
     // Update item
-    const updatedItem = await Item.update(id, req.body);
+    const updatedItem = await Item.updateItem(id, req.body);
 
     res.status(200).json({
       success: true,
@@ -207,7 +230,7 @@ const deleteItem = async (req, res, next) => {
     }
 
     // Delete item from database (CASCADE will delete images from item_images table)
-    await Item.delete(id);
+    await Item.deleteItem(id);
 
     res.status(200).json({
       success: true,
@@ -255,18 +278,69 @@ const getNearbyItems = async (req, res, next) => {
   }
 };
 
-// Get items by user
-const getUserItems = async (req, res, next) => {
+// Get items by user (My Items)
+const getMyItems = async (req, res, next) => {
   try {
-    // Get userId from params or use authenticated user's id
-    const userId = req.params.userId || req.user.id;
+    const userId = req.user.id;
+    const { status } = req.query;
 
-    const items = await Item.findByUserId(userId);
+    let items = await Item.findByUserId(userId);
+
+    // Filter by status if provided
+    if (status) {
+      items = items.filter(item => item.status === status);
+    }
 
     res.status(200).json({
       success: true,
       count: items.length,
       data: items
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Search items with text and location
+const searchItems = async (req, res, next) => {
+  try {
+    const {
+      q: searchQuery,
+      latitude,
+      longitude,
+      radius = 10,
+      page = 1,
+      limit = 12
+    } = req.query;
+
+    let location = null;
+    if (latitude && longitude) {
+      location = {
+        latitude: parseFloat(latitude),
+        longitude: parseFloat(longitude)
+      };
+    }
+
+    const items = await Item.searchItems(searchQuery, location, parseFloat(radius));
+
+    // Apply pagination
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + parseInt(limit);
+    const paginatedItems = items.slice(startIndex, endIndex);
+
+    const totalPages = Math.ceil(items.length / limit);
+
+    res.status(200).json({
+      success: true,
+      data: paginatedItems,
+      pagination: {
+        currentPage: parseInt(page),
+        totalPages,
+        totalItems: items.length,
+        itemsPerPage: parseInt(limit),
+        hasNextPage: page < totalPages,
+        hasPrevPage: page > 1
+      }
     });
   } catch (error) {
     next(error);
@@ -476,11 +550,11 @@ const updateItemStatus = async (req, res, next) => {
     const { status, buyer_id } = req.body;
 
     // Validate status
-    const validStatuses = ['available', 'pending', 'sold', 'completed'];
+    const validStatuses = ['available', 'pending', 'sold', 'donated', 'swapped', 'completed'];
     if (!status || !validStatuses.includes(status)) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid status. Must be available, pending, sold, or completed'
+        message: 'Invalid status. Must be available, pending, sold, donated, swapped, or completed'
       });
     }
 
@@ -502,48 +576,41 @@ const updateItemStatus = async (req, res, next) => {
       });
     }
 
-    // If status is completed, create transaction automatically
-    if (status === 'completed' || status === 'sold') {
-      if (!buyer_id) {
+    // If status is completing a transaction, create transaction record
+    if (['sold', 'donated', 'swapped', 'completed'].includes(status)) {
+      if (status === 'sold' && !buyer_id) {
         return res.status(400).json({
           success: false,
-          message: 'buyer_id is required when marking item as completed/sold'
+          message: 'buyer_id is required when marking item as sold'
         });
       }
 
-      // Check if buyer exists
-      const buyer = await User.findById(buyer_id);
-      if (!buyer) {
-        return res.status(404).json({
-          success: false,
-          message: 'Buyer not found'
-        });
-      }
+      if (buyer_id) {
+        // Check if buyer exists
+        const buyer = await User.findById(buyer_id);
+        if (!buyer) {
+          return res.status(404).json({
+            success: false,
+            message: 'Buyer not found'
+          });
+        }
 
-      // Create transaction
-      const transactionData = {
-        item_id: id,
-        seller_id: item.user_id,
-        buyer_id: buyer_id,
-        transaction_type: item.listing_type,
-        amount: item.price || 0
-      };
+        // Create transaction
+        const transactionData = {
+          item_id: id,
+          seller_id: item.user_id,
+          buyer_id: buyer_id,
+          transaction_type: item.listing_type,
+          amount: item.price || 0,
+          status: 'completed'
+        };
 
-      await Transaction.create(transactionData);
-
-      // Update transaction status to completed
-      const [transactions] = await pool.execute(
-        'SELECT id FROM transactions WHERE item_id = ? ORDER BY created_at DESC LIMIT 1',
-        [id]
-      );
-
-      if (transactions.length > 0) {
-        await Transaction.updateStatus(transactions[0].id, 'completed', item.user_id);
+        await Transaction.create(transactionData);
       }
     }
 
     // Update item status
-    const updatedItem = await Item.update(id, { status });
+    const updatedItem = await Item.updateStatus(id, status);
 
     res.status(200).json({
       success: true,
@@ -559,10 +626,11 @@ module.exports = {
   createItem,
   getAllItems,
   getItemById,
+  getMyItems,
   updateItem,
   deleteItem,
   getNearbyItems,
-  getUserItems,
+  searchItems,
   deleteItemImage,
   setPrimaryImage,
   advancedSearch,
