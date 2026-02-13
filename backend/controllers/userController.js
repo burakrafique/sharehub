@@ -2,6 +2,33 @@ const User = require('../models/User');
 const Item = require('../models/Item');
 const bcrypt = require('bcryptjs');
 
+// Get current user's profile (protected)
+const getCurrentUserProfile = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+
+    // Find user by id
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // Remove password from response
+    delete user.password_hash;
+
+    res.status(200).json({
+      success: true,
+      data: user
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // Update user profile
 const updateProfile = async (req, res, next) => {
   try {
@@ -25,15 +52,18 @@ const updateProfile = async (req, res, next) => {
     if (longitude) updateData.longitude = parseFloat(longitude);
 
     // Update user
-    const updatedUser = await User.update(userId, updateData);
+    const affectedRows = await User.update(userId, updateData);
 
-    if (!updatedUser) {
+    if (affectedRows === 0) {
       return res.status(404).json({
         success: false,
         message: 'User not found'
       });
     }
 
+    // Fetch updated user data
+    const updatedUser = await User.findById(userId);
+    
     // Remove password from response
     delete updatedUser.password_hash;
 
@@ -161,6 +191,7 @@ const getUserProfile = async (req, res, next) => {
 };
 
 module.exports = {
+  getCurrentUserProfile,
   updateProfile,
   changePassword,
   getUserItems,

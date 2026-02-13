@@ -207,7 +207,83 @@ CREATE TABLE notifications (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================
+-- Table: swap_requests
+-- Stores swap requests between users
+-- ============================================
+CREATE TABLE swap_requests (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    requester_id INT NOT NULL,
+    item_id INT NOT NULL,
+    offered_item_id INT,
+    message TEXT,
+    status ENUM('pending', 'accepted', 'rejected', 'cancelled') DEFAULT 'pending',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    responded_at TIMESTAMP NULL DEFAULT NULL,
+    
+    -- Foreign Keys
+    FOREIGN KEY (requester_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (item_id) REFERENCES items(id) ON DELETE CASCADE,
+    FOREIGN KEY (offered_item_id) REFERENCES items(id) ON DELETE SET NULL,
+    
+    -- Indexes
+    INDEX idx_requester_id (requester_id),
+    INDEX idx_item_id (item_id),
+    INDEX idx_status (status),
+    INDEX idx_created_at (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================
+-- Table: cart
+-- Stores user shopping cart items
+-- ============================================
+CREATE TABLE cart (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    item_id INT NOT NULL,
+    quantity INT DEFAULT 1,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    -- Foreign Keys
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (item_id) REFERENCES items(id) ON DELETE CASCADE,
+    
+    -- Unique constraint to prevent duplicate items in cart
+    UNIQUE KEY unique_cart_item (user_id, item_id),
+    
+    -- Indexes
+    INDEX idx_user_id (user_id),
+    INDEX idx_item_id (item_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================
+-- Table: donations
+-- Tracks donations from users to NGOs
+-- ============================================
+CREATE TABLE donations (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    donor_id INT NOT NULL,
+    ngo_id INT NOT NULL,
+    item_id INT NOT NULL,
+    message TEXT,
+    status ENUM('pending', 'accepted', 'completed', 'cancelled') DEFAULT 'pending',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    completed_at TIMESTAMP NULL DEFAULT NULL,
+    
+    -- Foreign Keys
+    FOREIGN KEY (donor_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (ngo_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (item_id) REFERENCES items(id) ON DELETE CASCADE,
+    
+    -- Indexes
+    INDEX idx_donor_id (donor_id),
+    INDEX idx_ngo_id (ngo_id),
+    INDEX idx_item_id (item_id),
+    INDEX idx_status (status),
+    INDEX idx_created_at (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================
 -- Display Success Message
 -- ============================================
 SELECT 'Database schema created successfully!' AS Status;
-SELECT 'Total tables created: 8' AS Info;
+SELECT 'Total tables created: 11' AS Info;

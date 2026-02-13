@@ -1,12 +1,16 @@
 const express = require('express');
 const router = express.Router();
 const {
+  getCurrentUserProfile,
   updateProfile,
   changePassword,
   getUserItems,
   getUserProfile
 } = require('../controllers/userController');
 const { verifyToken } = require('../middleware/authMiddleware');
+
+// GET /api/users/profile - Get current user's profile (protected)
+router.get('/profile', verifyToken, getCurrentUserProfile);
 
 // GET /api/users/profile/:userId - Get user profile (public)
 // Returns public user information and available items count

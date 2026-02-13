@@ -23,6 +23,9 @@ const transactionRoutes = require('./routes/transactionRoutes'); // Routes for t
 const favoriteRoutes = require('./routes/favoriteRoutes'); // Routes for favorites/bookmarks
 const notificationRoutes = require('./routes/notificationRoutes'); // Routes for notifications
 const adminRoutes = require('./routes/adminRoutes');      // Routes for admin operations
+const swapRoutes = require('./routes/swapRoutes');        // Routes for swap requests
+const cartRoutes = require('./routes/cartRoutes');        // Routes for shopping cart
+const donationRoutes = require('./routes/donationRoutes'); // Routes for donations
 const { handleMulterError } = require('./middleware/uploadMiddleware'); // Multer error handler
 
 // Load environment variables from .env file
@@ -211,6 +214,15 @@ app.use('/api/notifications', notificationRoutes);
 
 // Admin routes - mounted at /api/admin
 app.use('/api/admin', adminRoutes);
+
+// Swap routes - mounted at /api/swaps
+app.use('/api/swaps', swapRoutes);
+
+// Cart routes - mounted at /api/cart
+app.use('/api/cart', cartRoutes);
+
+// Donation routes - mounted at /api/donations
+app.use('/api/donations', donationRoutes);
 
 // ============================================
 // API Documentation Endpoint

@@ -359,27 +359,30 @@ const User = {
      */
     async update(id, userData) {
         try {
-            // SQL UPDATE query with parameterized placeholders
-            // Only update fields that are provided in userData
-            // We use SET with ? placeholders for each field
-            const query = `
-                UPDATE users 
-                SET name = ?, phone = ?, address = ?, latitude = ?, longitude = ? 
-                WHERE id = ?
-            `;
+            // Build dynamic UPDATE query based on provided fields
+            const allowedFields = ['name', 'phone', 'address', 'latitude', 'longitude', 'password_hash'];
+            const updates = [];
+            const values = [];
             
-            // Execute query with parameterized values
-            // Values are passed in the same order as the SET clause
-            // Note: We don't update email, password_hash, role, or created_at here
-            // Those should be handled separately for security reasons
-            const [result] = await promisePool.query(query, [
-                userData.name || null,
-                userData.phone || null,
-                userData.address || null,
-                userData.latitude || null,
-                userData.longitude || null,
-                id  // WHERE clause parameter
-            ]);
+            // Build SET clause dynamically
+            Object.keys(userData).forEach(key => {
+                if (allowedFields.includes(key) && userData[key] !== undefined) {
+                    updates.push(`${key} = ?`);
+                    values.push(userData[key]);
+                }
+            });
+            
+            // If no valid fields to update, return 0
+            if (updates.length === 0) {
+                return 0;
+            }
+            
+            // Add id to values array for WHERE clause
+            values.push(id);
+            
+            // Build and execute query
+            const query = `UPDATE users SET ${updates.join(', ')} WHERE id = ?`;
+            const [result] = await promisePool.query(query, values);
             
             // result.affectedRows tells us how many rows were updated
             // 0 = user not found, 1 = user updated successfully

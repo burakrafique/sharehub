@@ -12,6 +12,12 @@ export const getTransactions = async () => {
   return response.data;
 };
 
+// Get user's transaction history
+export const getUserTransactions = async () => {
+  const response = await API.get('/transactions');
+  return response.data;
+};
+
 // Get transaction by ID
 export const getTransactionById = async (id) => {
   const response = await API.get(`/transactions/${id}`);
@@ -33,6 +39,7 @@ export const cancelTransaction = async (id) => {
 export default {
   createTransaction,
   getTransactions,
+  getUserTransactions,
   getTransactionById,
   updateTransactionStatus,
   cancelTransaction

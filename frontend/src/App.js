@@ -8,6 +8,7 @@ import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
+import UserDashboard from './pages/UserDashboard';
 import CreateItem from './pages/CreateItem';
 import ItemDetail from './pages/ItemDetail';
 import ItemsList from './pages/ItemsList';
@@ -82,6 +83,14 @@ function AppContent() {
         {/* Protected Routes (require authentication) */}
         <Route 
           path="/dashboard" 
+          element={
+            <ProtectedRoute>
+              <UserDashboard />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/seller-dashboard" 
           element={
             <ProtectedRoute>
               <Dashboard />

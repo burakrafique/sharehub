@@ -79,14 +79,8 @@ const Navbar = () => {
                 </button>
                 {showDropdown && (
                   <div className="dropdown-menu dropdown-menu-end show">
-                    <Link to="/profile" className="dropdown-item">
-                      <i className="bi bi-person me-2"></i>Profile
-                    </Link>
-                    <Link to="/create-item" className="dropdown-item">
-                      <i className="bi bi-plus-circle me-2"></i>Create Listing
-                    </Link>
-                    <Link to="/my-items" className="dropdown-item">
-                      <i className="bi bi-box me-2"></i>My Items
+                    <Link to="/dashboard" className="dropdown-item">
+                      <i className="bi bi-speedometer2 me-2"></i>Dashboard
                     </Link>
                     <div className="dropdown-divider"></div>
                     <button onClick={handleLogout} className="dropdown-item text-danger">
